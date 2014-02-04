@@ -2,27 +2,10 @@
 #Email: huang.guoping08@gmail.com
 
 import sys
-import fpm_e
+import Cgi.pcgi_d
+import Cgi.pcgi_e
+from Main.main_context import GlobalHttpContext
 
-class GlobalHttpContext(object):
-    __ip = '127.0.0.1'
-    __port = 9001
-
-    @property
-    def ip(self):
-        return self.__ip
-
-    @ip.setter
-    def ip(self, ip):
-        self.__ip = ip
-
-    @property
-    def port(self):
-        return self.__port
-
-    @port.setter
-    def port(self, port):
-        self.__port = port
 
 global_http_context = GlobalHttpContext()
 
@@ -32,7 +15,8 @@ global_http_context = GlobalHttpContext()
 default_argv_params = {'version': 0,
                        'process': 1,
                        'thread': 1,
-                       'host': 1}
+                       'host': 1,
+                       'mode': 1}
 
 def return_param_format(key, index):
     if key == '--v':
@@ -47,6 +31,9 @@ def return_param_format(key, index):
     elif key == '--t':
         argv_param_thread_callback(sys.argv[index + 1])
         return default_argv_params['thread']
+    elif key == '--m':
+        argv_param_mode_callback(sys.argv[index + 1])
+        return default_argv_params['mode']
     else:
         return -1
 
@@ -60,8 +47,10 @@ def print_default_argv_info():
     info += '-h bind the host when run fpm server,default host: 127.0.0.1:9001(ip:port)\n'
     info += '-p process count when run fpm server\n'
     info += '-t thread count when run fpm server\n'
+    info += '-m use socket mode when run fpm server\n'
     info += '\n'
     print(info)
+    sys.exit(0)
 
 def get_argv_param():
     if len(sys.argv) > 1:
@@ -89,6 +78,7 @@ def argv_param_host_callback(origion_param):
         global_http_context.port = origion_param[i:]
     else:
         print('warning: host format is wrong. default 127.0.0.1;9001')
+        sys.exit(-1)
 
 def argv_param_process_callback(origion_param):
     print(origion_param)
@@ -96,12 +86,19 @@ def argv_param_process_callback(origion_param):
 def argv_param_thread_callback(origion_param):
     print(origion_param)
 
-def fpm_main():
-    fpm = fpm_e.Fpm()
+def argv_param_mode_callback(origion_param):
+    if origion_param == 'epoll':
+        global_http_context.mode = global_http_context.MODE_EPOLL
+
+def cgi_main():
+    if global_http_context.mode == GlobalHttpContext.MODE_DEFAULT:
+        fpm = Cgi.pcgi_d.Pcgi()
+    else:
+        fpm = Cgi.pcgi_e.Pcgi()
     fpm.host = global_http_context.ip
     fpm.port = global_http_context.port
     fpm.run()
 
 if __name__ == '__main__':
     get_argv_param()
-    #fpm_main()
+    cgi_main()

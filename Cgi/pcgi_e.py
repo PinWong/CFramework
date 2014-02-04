@@ -11,9 +11,9 @@ import select
 import sys
 import Web.CHttpContext
 
-class Fpm(object):
-    #__host = '127.0.0.1'
-    __host = '192.168.41.128'
+class Pcgi(object):
+    __host = '127.0.0.1'
+    #__host = '192.168.41.128'
     __port = 9001
     __socket_listen = 1024
     __socket_recv = 1024

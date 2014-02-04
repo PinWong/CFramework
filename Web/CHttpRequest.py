@@ -4,9 +4,10 @@
 class CHttpRequest(object):
 
     #__header = ''
+    __context = None
     __headers = {}
     __method = None
-    __url = None
+    __uri = None
     __http_version = None
     METHOD_TYPE = ['POST', 'GET', 'HEAD']
     __data = None
@@ -49,9 +50,13 @@ class CHttpRequest(object):
     def method(self):
         return self.__method
 
+    @property
+    def uri(self):
+        return self.__uri
+
     def _set_request_info(self):
         header = self.header[:self.header.find('\r\n')]
-        method_type, self.__url, self.__http_version = header.split(' ')
+        method_type, self.__uri, self.__http_version = header.split(' ')
         if method_type in self.METHOD_TYPE:
             self.__method = method_type
         else:
@@ -67,14 +72,20 @@ class CHttpRequest(object):
             i = header.find(': ')
             if i >= 0:
                 self.__headers[header[:i]] = header[i+2:]
+                if header[:i] == 'Cookie':
+                    self._set_cookie(header[i + 2:])
+
+    def _set_cookie(self, cookies):
+        self.__context.set_cookies(cookies)
 
     def __init__(self, context):
-        self.__header = context.request_content
+        self.__context = context
+        self.__header = self.__context.request_content
         self._set_request_info()
         self._set_data()
         self._set_headers()
         print(self.__method)
-        print(self.__url)
+        print(self.__uri)
         print(self.__http_version)
         print(self.__headers)
         print(self.__data)
